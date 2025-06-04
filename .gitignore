@@ -37,3 +37,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Generated ###
+src/main/java/org/generated
+src/main/java/org/openapitools
