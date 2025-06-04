@@ -383,7 +383,7 @@ paths:
         '400':
           description: Невалидные параметры
   /notifications:
-    post:
+    patch:
       summary: Переключить режим уведомлений
       description: |
         Включает или отключает все уведомления для чата через заголовки.
@@ -417,7 +417,7 @@ paths:
         '400':
           description: Неверный формат заголовков
   /filters/{linkId}:
-    patch:
+    put:
       summary: Обновить фильтры ссылки
       description: |
         Обновляет фильтры для отслеживаемой ссылки,
