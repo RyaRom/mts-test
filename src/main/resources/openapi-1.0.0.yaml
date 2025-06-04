@@ -6,42 +6,73 @@ paths:
   /tg-chat/{id}:
     post:
       summary: Зарегистрировать чат
+      description: |
+        Регистрирует новый Telegram-чат в системе для получения уведомлений.
+        Чат идентифицируется уникальным ID, который должен совпадать с реальным Telegram Chat ID.
+
       parameters:
         - name: id
           in: path
           required: true
+          description: |
+            Уникальный идентификатор Telegram-чата в формате int64.
+            Должен соответствовать реальному `chat.id` из Telegram API.
           schema:
             type: integer
             format: int64
+            example: -1002056789012
       responses:
         '200':
-          description: Чат зарегистрирован
+          description: |
+            Чат успешно зарегистрирован. Система начала отслеживание ссылок для этого чата.
         '400':
-          description: Некорректные параметры запроса
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+          description: |
+            Некорректный запрос. Возможные причины:
+            - ID чата не соответствует формату int64
+            - Чат с таким ID уже зарегистрирован
+            - Системная ошибка валидации
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ApiErrorResponse'
     delete:
       summary: Удалить чат
+      description: |
+        Полностью удаляет чат из системы, включая все связанные отслеживаемые ссылки и настройки.
+        После удаления чат перестает получать уведомления.
+
+        **Важно:** Операция необратима.
+
       parameters:
         - name: id
           in: path
           required: true
+          description: |
+            Идентификатор зарегистрированного Telegram-чата.
+            Должен существовать в системе.
           schema:
             type: integer
             format: int64
+            example: -1002056789012
       responses:
         '200':
-          description: Чат успешно удалён
+          description: |
+            Чат и все связанные данные успешно удалены.
+            Тело ответа отсутствует.
         '400':
-          description: Некорректные параметры запроса
+          description: |
+            Некорректный запрос. Возможные причины:
+            - Неверный формат ID чата
+            - ID не соответствует числовому формату int64
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
         '404':
-          description: Чат не существует
+          description: |
+            Чат не найден в системе. Возможные причины:
+            - Чат никогда не регистрировался
+            - Чат уже был удален ранее
           content:
             application/json:
               schema:
@@ -49,84 +80,175 @@ paths:
   /links:
     get:
       summary: Получить все отслеживаемые ссылки
+      description: |
+        Возвращает список всех ссылок, отслеживаемых для указанного чата.
+        Включает метаданные: теги, фильтры и идентификаторы ссылок.
+
+        **Особенности:**
+        - Данные возвращаются пагинированно (поле `size` в ответе)
+        - Пустой список означает отсутствие зарегистрированных ссылок
+
       parameters:
         - name: Tg-Chat-Id
           in: header
           required: true
+          description: |
+            Идентификатор чата, для которого запрашиваются ссылки.
+            Должен соответствовать зарегистрированному чату.
           schema:
             type: integer
             format: int64
+            example: -1002056789012
       responses:
         '200':
-          description: Ссылки успешно получены
+          description: |
+            Успешный ответ содержит:
+            - Массив объектов `LinkResponse`
+            - Общее количество ссылок в поле `size`
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListLinksResponse'
+              example:
+                links:
+                  - id: 123
+                    url: "https://github.com/user/repo"
+                    tags: [ "backend", "monitoring" ]
+                    filters: [ "new_commits" ]
+                  - id: 456
+                    url: "https://stackoverflow.com/questions"
+                    tags: [ "support" ]
+                    filters: [ "new_answers" ]
+                size: 2
         '400':
-          description: Некорректные параметры запроса
+          description: |
+            Некорректный запрос. Возможные причины:
+            - Неверный формат Tg-Chat-Id
+            - Чат не зарегистрирован в системе
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
     post:
       summary: Добавить отслеживание ссылки
+      description: |
+        Регистрирует новую ссылку для отслеживания в указанном чате.
+        Поддерживает настройку фильтров и тегов для гибкой настройки уведомлений.
+
+        **Требования к ссылке:**
+        - Должна быть валидным URL
+        - Не должна дублировать существующие ссылки в этом чате
+
       parameters:
         - name: Tg-Chat-Id
           in: header
           required: true
+          description: |
+            Идентификатор чата, к которому привязывается ссылка.
           schema:
             type: integer
             format: int64
+            example: -1002056789012
       requestBody:
+        description: |
+          Конфигурация отслеживаемой ссылки.
+          Поле `link` обязательно, `tags` и `filters` опциональны.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/AddLinkRequest'
+            example:
+              link: "https://github.com/opensource/project"
+              tags: [ "development", "urgent" ]
+              filters: [ "new_releases", "hotfixes" ]
         required: true
       responses:
         '200':
-          description: Ссылка успешно добавлена
+          description: |
+            Ссылка успешно добавлена. Возвращает созданный ресурс с:
+            - Автоматически сгенерированным ID
+            - Нормализованным URL
+            - Примененными тегами и фильтрами
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LinkResponse'
+              example:
+                id: 789
+                url: "https://github.com/opensource/project"
+                tags: [ "development", "urgent" ]
+                filters: [ "new_releases", "hotfixes" ]
         '400':
-          description: Некорректные параметры запроса
+          description: |
+            Ошибка обработки запроса. Возможные причины:
+            - Невалидный URL
+            - Пустое тело запроса
+            - Неподдерживаемый фильтр/тег
+            - Ссылка уже отслеживается в этом чате
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
     delete:
       summary: Убрать отслеживание ссылки
+      description: |
+        Прекращает отслеживание указанной ссылки для заданного чата.
+        Удаляет связь между чатом и ссылкой, но не удаляет саму ссылку из системы (если она используется другими чатами).
+
+        **Важно:**
+        - Для идентификации используется комбинация Tg-Chat-Id и Link-Url
+        - После удаления чат перестает получать уведомления по этой ссылке
+
       parameters:
         - name: Tg-Chat-Id
           in: header
           required: true
+          description: |
+            Идентификатор чата, из которого нужно удалить ссылку.
+            Должен быть зарегистрирован в системе.
           schema:
             type: integer
             format: int64
+            example: -1002056789012
         - name: Link-Url
           in: header
           required: true
+          description: |
+            URL отслеживаемой ссылки в кодированном виде (RFC 3986).
+            Должен точно совпадать с сохраненным значением (регистр, слэши и т.д.).
           schema:
             type: string
             format: uri
+            example: "https://github.com/user/repo/pulls"
       responses:
         '200':
-          description: Ссылка успешно убрана
+          description: |
+            Ссылка успешно удалена из отслеживаемых для указанного чата.
+            Возвращает полные данные удаленной связи.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LinkResponse'
+              example:
+                id: 123
+                url: "https://github.com/user/repo/pulls"
+                tags: [ "backend" ]
+                filters: [ "new_pulls" ]
         '400':
-          description: Некорректные параметры запроса
+          description: |
+            Некорректный запрос. Возможные причины:
+            - Невалидный формат Tg-Chat-Id
+            - URL содержит синтаксические ошибки
+            - Отсутствует обязательный заголовок
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
         '404':
-          description: Ссылка не найдена
+          description: |
+            Связь не найдена. Возможные причины:
+            - Указанный чат не отслеживает данную ссылку
+            - Ссылка или чат не существуют в системе
           content:
             application/json:
               schema:
@@ -134,21 +256,49 @@ paths:
   /updates:
     post:
       summary: Отправить обновление
+      description: |
+        Системный метод для обработки внешних обновлений по отслеживаемым ссылкам.
+        Используется внутренними сервисами мониторинга для уведомления чатов об изменениях.
+
+        **Типичные сценарии использования:**
+        - Вебхук от GitHub при пуше в репозиторий
+        - Парсер новостных сайтов обнаружил изменения
+        - CRON-задача проверки обновлений
+
       requestBody:
+        description: |
+          Пакет данных об обнаруженных изменениях.
+          Содержит идентификатор ссылки, описание изменений и список чатов для уведомления.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/LinkUpdate'
+            example:
+              id: 123
+              url: "https://github.com/user/repo"
+              description: "New commit in main branch: 'Fix security vulnerability'"
+              tgChatIds: [ -1002056789012, -1003098765432 ]
         required: true
       responses:
         '200':
-          description: Обновление обработано
+          description: |
+            Обновление успешно принято и поставлено в очередь на отправку.
+            Тело ответа отсутствует.
         '400':
-          description: Некорректные параметры запроса
+          description: |
+            Ошибка валидации. Возможные причины:
+            - Некорректный формат URL
+            - Пустой список tgChatIds
+            - Отсутствует обязательное поле description
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                description: "Validation failed"
+                code: "UPDATE_VALIDATION_ERROR"
+                exceptionName: "InvalidUpdateException"
+                exceptionMessage: "Field 'description' must not be empty"
 components:
   schemas:
     LinkUpdate:
