@@ -30,18 +30,11 @@ paths:
             Некорректный запрос. Возможные причины:
             - ID чата не соответствует формату int64
             - Чат с таким ID уже зарегистрирован
-            - Системная ошибка валидации
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/ApiErrorResponse'
     delete:
       summary: Удалить чат
       description: |
         Полностью удаляет чат из системы, включая все связанные отслеживаемые ссылки и настройки.
         После удаления чат перестает получать уведомления.
-
-        **Важно:** Операция необратима.
 
       parameters:
         - name: id
@@ -168,7 +161,6 @@ paths:
             Ссылка успешно добавлена. Возвращает созданный ресурс с:
             - Автоматически сгенерированным ID
             - Нормализованным URL
-            - Примененными тегами и фильтрами
           content:
             application/json:
               schema:
@@ -326,13 +318,11 @@ paths:
     patch:
       summary: Обновить фильтры ссылки
       description: |
-        Обновляет фильтры для отслеживаемой ссылки с помощью JSON Merge Patch.
-        Позволяет частично изменять конфигурацию без передачи всего объекта.
+        Обновляет фильтры для отслеживаемой ссылки,
+        позволяет частично изменять конфигурацию без передачи всего объекта.
 
         **Особенности:**
         - Поддерживает добавление/удаление отдельных фильтров
-        - Для удаления фильтра передать `null` в массиве
-        - Только для владельцев ссылки/чата
 
       parameters:
         - name: linkId
@@ -349,7 +339,7 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdateFiltersRequest'
             example:
-              filters: [ "new_commits", null, "hotfixes" ] # Удаляет второй фильтр
+              filters: [ "new_commits", "hotfixes" ] # Удаляет второй фильтр
         required: true
       responses:
         '200':
@@ -364,70 +354,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
-  /updates:
-    post:
-      summary: Отправить обновление
-      description: |
-        Системный метод для обработки внешних обновлений по отслеживаемым ссылкам.
-        Используется внутренними сервисами мониторинга для уведомления чатов об изменениях.
-
-        **Типичные сценарии использования:**
-        - Вебхук от GitHub при пуше в репозиторий
-        - Парсер новостных сайтов обнаружил изменения
-        - CRON-задача проверки обновлений
-
-      requestBody:
-        description: |
-          Пакет данных об обнаруженных изменениях.
-          Содержит идентификатор ссылки, описание изменений и список чатов для уведомления.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LinkUpdate'
-            example:
-              id: 123
-              url: "https://github.com/user/repo"
-              description: "New commit in main branch: 'Fix security vulnerability'"
-              tgChatIds: [ -1002056789012, -1003098765432 ]
-        required: true
-      responses:
-        '200':
-          description: |
-            Обновление успешно принято и поставлено в очередь на отправку.
-            Тело ответа отсутствует.
-        '400':
-          description: |
-            Ошибка валидации. Возможные причины:
-            - Некорректный формат URL
-            - Пустой список tgChatIds
-            - Отсутствует обязательное поле description
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-              example:
-                description: "Validation failed"
-                code: "UPDATE_VALIDATION_ERROR"
-                exceptionName: "InvalidUpdateException"
-                exceptionMessage: "Field 'description' must not be empty"
 components:
   schemas:
-    LinkUpdate:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        url:
-          type: string
-          format: uri
-        description:
-          type: string
-        tgChatIds:
-          type: array
-          items:
-            type: integer
-            format: int64
     LinkResponse:
       type: object
       properties:
