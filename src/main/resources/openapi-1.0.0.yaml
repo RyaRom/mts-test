@@ -253,6 +253,117 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
+  /stats/{chatId}:
+    get:
+      summary: Получить статистику чата
+      description: |
+        Возвращает текстовую статистику по отслеживаемым ссылкам в формате:
+        "Ссылок: X, Обновлений за 24ч: Y, Активных фильтров: Z"
+
+        **Формат ответа:** plain text
+
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Текстовая статистика
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Ссылок: 5, Обновлений за 24ч: 12, Активных фильтров: 3"
+        '404':
+          description: Чат не найден
+  /tracking/preferences:
+    put:
+      summary: Заменить настройки отслеживания
+      description: |
+        Полностью заменяет текущие настройки отслеживания для пользователя.
+        Принимает данные в формате `application/x-www-form-urlencoded`.
+
+        **Сброс настроек:**
+        - Если параметры не переданы, восстанавливаются настройки по умолчанию
+
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                interval:
+                  type: integer
+                  description: Интервал проверки в минутах
+                notifyEmail:
+                  type: boolean
+                  description: Разрешить email-уведомления
+                priority:
+                  type: string
+                  enum: [ low, medium, high ]
+            example:
+              interval: 30
+              notifyEmail: true
+              priority: high
+      responses:
+        '200':
+          description: Настройки успешно применены
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Preferences updated"
+        '422':
+          description: Неверные значения параметров
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /filters/{linkId}:
+    patch:
+      summary: Обновить фильтры ссылки
+      description: |
+        Обновляет фильтры для отслеживаемой ссылки с помощью JSON Merge Patch.
+        Позволяет частично изменять конфигурацию без передачи всего объекта.
+
+        **Особенности:**
+        - Поддерживает добавление/удаление отдельных фильтров
+        - Для удаления фильтра передать `null` в массиве
+        - Только для владельцев ссылки/чата
+
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          description: ID ссылки из системы
+          schema:
+            type: integer
+            format: int64
+            example: 123
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFiltersRequest'
+            example:
+              filters: [ "new_commits", null, "hotfixes" ] # Удаляет второй фильтр
+        required: true
+      responses:
+        '200':
+          description: Фильтры успешно обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkResponse'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
   /updates:
     post:
       summary: Отправить обновление
@@ -373,3 +484,13 @@ components:
         size:
           type: integer
           format: int32
+    UpdateFiltersRequest:
+      type: object
+      properties:
+        filters:
+          type: array
+          items:
+            type: string
+          description: |
+            Новый массив фильтров.
+          example: [ "new_commits", "releases" ]
