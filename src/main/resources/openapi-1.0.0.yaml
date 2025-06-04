@@ -314,6 +314,108 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
+  /chats/rename:
+    put:
+      summary: Изменить отображаемое имя чата
+      description: |
+        Обновляет псевдоним чата в системе. Не влияет на идентификатор.
+
+        **Сценарий использования:**  
+        Пользователь хочет дать понятное имя групповому чату вместо ID
+
+      parameters:
+        - name: Tg-Chat-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: New-Name
+          in: header
+          required: true
+          schema:
+            type: string
+            maxLength: 50
+            example: "Команда бэкенда"
+      responses:
+        '200':
+          description: Имя успешно обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatInfo'
+        '400':
+          description: |
+            Ошибка валидации:
+            - Слишком длинное имя (>50 символов)
+            - Неподдерживаемые символы
+  /links/check:
+    get:
+      summary: Проверить отслеживание ссылки
+      description: |
+        Проверяет, отслеживается ли конкретная ссылка в чате.
+        Возвращает простой ответ true/false.
+
+        **Сценарий использования:**  
+        Пользователь хочет убедиться, что ссылка уже добавлена перед повторной попыткой
+
+      parameters:
+        - name: Tg-Chat-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: Link-Url
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uri
+      responses:
+        '200':
+          description: Результат проверки
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+        '400':
+          description: Невалидные параметры
+  /notifications:
+    post:
+      summary: Переключить режим уведомлений
+      description: |
+        Включает или отключает все уведомления для чата через заголовки.
+        Не требует тела запроса. Простой переключатель состояния.
+
+        **Сценарий использования:**  
+        Пользователь хочет временно отключить уведомления во время отпуска
+
+      parameters:
+        - name: Tg-Chat-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: Notifications-Enabled
+          in: header
+          required: true
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: |
+            Состояние успешно изменено. Возвращает новое состояние.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Уведомления отключены"
+        '400':
+          description: Неверный формат заголовков
   /filters/{linkId}:
     patch:
       summary: Обновить фильтры ссылки
@@ -356,6 +458,23 @@ paths:
                 $ref: '#/components/schemas/ApiErrorResponse'
 components:
   schemas:
+    ChatInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: -1002056789012
+        displayName:
+          type: string
+          nullable: true
+          example: "Команда бэкенда"
+        trackingEnabled:
+          type: boolean
+          example: true
+        linksCount:
+          type: integer
+          example: 5
     LinkResponse:
       type: object
       properties:
