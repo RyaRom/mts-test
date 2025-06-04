@@ -41,3 +41,4 @@ build/
 ### Generated ###
 src/main/java/org/generated
 src/main/java/org/openapitools
+.openapi-generator
