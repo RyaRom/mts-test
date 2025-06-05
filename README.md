@@ -3,7 +3,7 @@
 mvn clean compile
 ```
 Комментарий задается в x-additional-comment у метода openapi и генерируется в интерфейсах Api и Delegate
-Пример:
+##### Пример:
 ```
   /notifications:
     patch:
