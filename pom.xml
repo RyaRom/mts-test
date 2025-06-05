@@ -90,6 +90,7 @@
                             <apiPackage>org.generated.api</apiPackage>
                             <modelPackage>org.generated.api.model</modelPackage>
                             <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
+                            <templateResourcePath>${project.basedir}/src/main/resources/templates/out</templateResourcePath>
                             <configOptions>
                                 <delegatePattern>true</delegatePattern>
                             </configOptions>
