@@ -5,6 +5,7 @@ info:
 paths:
   /tg-chat/{id}:
     post:
+      x-additional-comment: Метод для регистрации чата
       summary: Зарегистрировать чат
       description: |
         Регистрирует новый Telegram-чат в системе для получения уведомлений.
@@ -31,6 +32,7 @@ paths:
             - ID чата не соответствует формату int64
             - Чат с таким ID уже зарегистрирован
     delete:
+      x-additional-comment: Метод для удаления чата
       summary: Удалить чат
       description: |
         Полностью удаляет чат из системы, включая все связанные отслеживаемые ссылки и настройки.
@@ -72,6 +74,7 @@ paths:
                 $ref: '#/components/schemas/ApiErrorResponse'
   /links:
     get:
+      x-additional-comment: Метод для получения отслеживаемых ссылки
       summary: Получить все отслеживаемые ссылки
       description: |
         Возвращает список всех ссылок, отслеживаемых для указанного чата.
@@ -123,6 +126,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
     post:
+      x-additional-comment: Метод для отслеживания ссылки
       summary: Добавить отслеживание ссылки
       description: |
         Регистрирует новую ссылку для отслеживания в указанном чате.
@@ -182,6 +186,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
     delete:
+      x-additional-comment: Метод для удаления отслеживания ссылки
       summary: Убрать отслеживание ссылки
       description: |
         Прекращает отслеживание указанной ссылки для заданного чата.
@@ -247,6 +252,7 @@ paths:
                 $ref: '#/components/schemas/ApiErrorResponse'
   /stats/{chatId}:
     get:
+      x-additional-comment: Метод для получения статистики чата
       summary: Получить статистику чата
       description: |
         Возвращает текстовую статистику по отслеживаемым ссылкам в формате:
@@ -273,6 +279,7 @@ paths:
           description: Чат не найден
   /tracking/preferences:
     put:
+      x-additional-comment: Метод для настроек отслеживания
       summary: Заменить настройки отслеживания
       description: |
         Полностью заменяет текущие настройки отслеживания для пользователя.
@@ -316,6 +323,7 @@ paths:
                 $ref: '#/components/schemas/ApiErrorResponse'
   /chats/rename:
     put:
+      x-additional-comment: Метод изменения имени чата
       summary: Изменить отображаемое имя чата
       description: |
         Обновляет псевдоним чата в системе. Не влияет на идентификатор.
@@ -351,6 +359,7 @@ paths:
             - Неподдерживаемые символы
   /links/check:
     get:
+      x-additional-comment: Метод для проверки отслеживания ссылки
       summary: Проверить отслеживание ссылки
       description: |
         Проверяет, отслеживается ли конкретная ссылка в чате.
@@ -384,6 +393,7 @@ paths:
           description: Невалидные параметры
   /notifications:
     patch:
+      x-additional-comment: Метод для переключения режима уведомлений
       summary: Переключить режим уведомлений
       description: |
         Включает или отключает все уведомления для чата через заголовки.
@@ -418,6 +428,7 @@ paths:
           description: Неверный формат заголовков
   /filters/{linkId}:
     put:
+      x-additional-comment: Метод для обновления фильтров ссылок
       summary: Обновить фильтры ссылки
       description: |
         Обновляет фильтры для отслеживаемой ссылки,

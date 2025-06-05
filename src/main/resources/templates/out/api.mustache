@@ -259,6 +259,7 @@ public interface {{classname}} {
     {{{.}}}
     {{/vendorExtensions.x-operation-extra-annotation}}
     {{#vendorExtensions.x-sse}}@ResponseBody{{/vendorExtensions.x-sse}}
+    // Comment: {{vendorExtensions.x-additional-comment}}
     {{#jdk8-default-interface}}default {{/jdk8-default-interface}}{{>responseType}} {{#delegate-method}}_{{/delegate-method}}{{operationId}}(
         {{#allParams}}{{>queryParams}}{{>pathParams}}{{>headerParams}}{{>bodyParams}}{{>formParams}}{{>cookieParams}}{{^-last}},
         {{/-last}}{{/allParams}}{{#reactive}}{{#hasParams}},
